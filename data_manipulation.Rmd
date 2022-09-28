@@ -1,0 +1,116 @@
+---
+title: "data_manipulation with 'dplyr"
+output: github_document
+date: "2022-09-27"
+---
+
+```{r}
+library(tidyverse)
+
+options(tibble.print_min = 3)
+
+litters_data = 
+  read_csv("./data/FAS_litters.CSV")
+litters_data = 
+  janitor::clean_names(litters_data)
+#janitor function 可以帮助clean 文件里面的variable name里面包含的特殊字符，意思就是把variable name统一格式，整理数据！
+
+pups_data = read_csv("./data/FAS_pups.csv")
+pups_data = janitor::clean_names(pups_data)
+
+```
+
+###`select`
+
+you can use `select` function to select columns when you have large datasets and specify the columns you want to keep by naming all ofthem. 
+
+```{r}
+select(litters_data, group, litter_number, gd0_weight, pups_born_alive)
+```
+
+you can also write the select in the form of below code, it's more succinct
+
+```{r}
+select(litters_data, group:pups_born_alive)
+```
+
+you can also specify columns you'd like to remove:
+
+```{r}
+select(litters_data, -pups_survive)
+select(litters_data, -pups_survive, -group)
+```
+
+you can rename variables as part of this process: (new name is on the left side of  “=” )
+
+```{r}
+select(litters_data, GROUP = group, LiTeEr_NuMbEr = litter_number)
+```
+
+select 以gd为开头名字的variables
+```{r}
+select(litters_data, starts_with("gd"))
+
+```
+
+`everything()' is handy for re-organizing columns without discarding anything 
+
+```{r}
+select(litters_data, litter_number, pups_survive, everything())
+```
+
+you will often filter using comparison operators (`>`,`>=`,`<`,`<=`,`==`,and`!=`). You may also use `%in%` to detect if values appears in a set, and `is.na()`to find missing values. The results of comparisons are logical -- the statement is `TRUE` or `FALSE` depending on the values you compare -- and can be combined with other compasisons using the logical operators`&` and `|`, or negated using `!`. 
+
+Some ways you might filter the litters data are: 
+
+* `group %in% c("Con7", "Con8")`
+
+```{r}
+filter(litters_data, gd_of_birth == 20)
+```
+
+```{r}
+filter(litters_data, group == "Con7" & gd_of_birth == 20)
+```
+
+* `drop_na(litters_data)` will remove any row with a missing value 
+* `drop_na(litters_data, wt_increase)` will remove rows for which `wt_increase` is missing. 
+
+### `mutate` 
+we use `mutate` to create new variable 
+```{r}
+mutate(litters_data,
+       wt_gain = gd18_weight - gd0_weight, 
+       group = str_to_lower(group))
+
+```
+
+
+### arrange 
+
+you can arrange the rows in your data according to the values in one or more columns: 
+
+```{r}
+head(arrange(litters_data, group, pups_born_alive), 10)
+```
+
+you can also sort in descending order if you'd like
+
+```{r}
+head(arrange(litters_data, desc(group), pups_born_alive), 10)
+```
+
+```{r}
+litter_data = 
+  read_csv(".data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group)) %>%
+  drop_na(wt_gain)
+
+litters_data
+```
+
+
